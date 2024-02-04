@@ -51,5 +51,72 @@ class ValidatorTest extends TestCase
 
         log::info($message->toJson(JSON_PRETTY_PRINT));
     }
+
+    public function testValidationMultipe()
+    {
+        $data = [
+            'username' =>'eko',
+            'password' => 'eko'
+        ];
+
+        $rules = [
+            'username' => 'required|email|max:100',
+            'password'=> ['required','min:6','max:20']
+        ];
+
+        $validator = Validator::make($data,$rules);
+
+        $message = $validator->getMessageBag();
+        
+        self::assertNotNull($message);
+
+        log::info($message->toJson(JSON_PRETTY_PRINT));
+    }
+
+    public function testValidationMultipes()
+    {
+        $data = [
+            'username' =>'eko',
+            'password' => 'eko'
+        ];
+
+        $rules = [
+            'username' => 'required|email|max:100',
+            'password'=> ['required','min:6','max:20']
+        ];
+
+        $validator = Validator::make($data,$rules);
+
+        $message = $validator->getMessageBag();
+        
+        self::assertNotNull($message);
+
+        log::info($message->toJson(JSON_PRETTY_PRINT));
+    }
+
+    public function testValidationValid()
+    {
+        $data = [
+            'username' =>'eko@gmail.com',
+            'password' => 'eko1234',
+            'text' => true,
+            'name' => 'kosong'
+        ];
+
+        $rules = [
+            'username' => 'required|email|max:100',
+            'password'=> ['required','min:6','max:20']
+        ];
+
+        $validator = Validator::make($data,$rules);
+
+        $message = $validator->validate();
+        
+        self::assertNotNull($message);
+
+        log::info(json_encode($message,JSON_PRETTY_PRINT));
+    }
+
+    
 }
 
