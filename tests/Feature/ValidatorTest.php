@@ -8,6 +8,9 @@ use Tests\TestCase;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\App;
+use App\Rules\Uppercase;
+use App\Rules\RegistrationRule;
 
 class ValidatorTest extends TestCase
 {
@@ -54,6 +57,7 @@ class ValidatorTest extends TestCase
 
     public function testValidationMultipe()
     {
+        App::setLocale("id");
         $data = [
             'username' =>'eko',
             'password' => 'eko'
@@ -117,6 +121,88 @@ class ValidatorTest extends TestCase
         log::info(json_encode($message,JSON_PRETTY_PRINT));
     }
 
+    // public function testAdditionalValidation()
+    // {
+    //     $data =[ 'username' =>'eko@gmail.com', 'password'=>'eko@gmail.com' ];
+    //     $rules=['username' => 'required|max:100|email','password'=>'min:6|required'];
+
+    //     $validator = Validator::make($data,$rules);
+    //     $validator->after(function (\Illuminate\validator\Validator $validator)
+    //      {
+    //         $dta = $validator->getData();
+    //         if($dta['username']== $dta['password'])
+    //         {
+    //             $validator->errors()->add("password","password tidak boleh sama dengan username");
+    //         }
+    //      });
+
+    //      self::assertTrue($validator->passes());
+    //      log::info($validator->errors->toJson(JSON_PRETTY_PRINT));
+    // }
+
+    public function testValidatorCustom()
+    {
+        $data = [
+            'name' => 'ASEPM',
+            'password'=> 'df098u'
+            ];
     
+        $rules = [ 'name'=>['required', new Uppercase()],
+                    'password'=>['required',new RegistrationRule()]
+                ];
+    
+        $validator = Validator::make($data,$rules);
+
+        self::assertNotNull($validator);
+
+        $message = $validator->getMessageBag();
+
+        log::info($message->toJson(JSON_PRETTY_PRINT));
+    }
+
+    public function testNestedArray()
+    {
+        $data = ['name'=>['first'=>'asep','last'=>'yadi']];
+        $rules= ['name.first'=>'required','name.last'=>'required'];
+
+        $validator = Validator::make($data,$rules);
+
+        self::assertTrue($validator->passes());
+    }
+
+    public function testNestedArrayIndexed()
+    {
+        $data = ['name'=>
+                [
+                ['first'=>'asep','last'=>'yadi'],
+                ['first'=>'mul','last'=>'iday']
+                ]
+        ];
+        $rules= ['name.*.first'=>'required','name.*.last'=>'required'];
+
+        $validator = Validator::make($data,$rules);
+
+        self::assertTrue($validator->passes());
+    }
+    
+    public function testLogin()
+    {
+        $this->post('/login',['username'=>'','password'=>''])
+        ->assertStatus(400); //harusnya 400
+    }
+
+    public function testLoginSuccess()
+    {
+        $this->post('/login',['username'=>'admin','password'=>'235ert'])
+        ->assertStatus(200);
+    }
+
+    public function testLoginCustomReqeust()
+    {
+        $p = $this->post('/lgin',['username'=>'uyfgg@g.com','password'=>'235ert.@']);
+        $p->assertStatus(200);
+
+        log::info(json_encode($p));
+    }
 }
 
